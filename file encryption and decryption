@@ -1,0 +1,112 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <openssl/aes.h>
+
+#define AES_BLOCK_SIZE 16
+
+//function defnation to do file encryption of input file
+void encryptFile(const char* inputFile, const char* outputFile, const char* key) {
+    FILE* in = fopen(inputFile, "rb");
+    FILE* out = fopen(outputFile, "wb");
+    
+    unsigned char iv[AES_BLOCK_SIZE];
+    memset(iv, 0x00, AES_BLOCK_SIZE);
+    
+    AES_KEY aesKey;
+    AES_set_encrypt_key((const unsigned char*)key, 128, &aesKey);
+    
+    unsigned char inBuffer[AES_BLOCK_SIZE];
+    unsigned char outBuffer[AES_BLOCK_SIZE];
+    
+    while (fread(inBuffer, 1, sizeof(inBuffer), in) == sizeof(inBuffer)) {
+        AES_encrypt(inBuffer, outBuffer, &aesKey);
+        fwrite(outBuffer, 1, sizeof(outBuffer), out);
+    }
+    
+    fclose(in);
+    fclose(out);
+
+}
+
+//function defination to decrypt of encrypted file
+void decryptFile(const char* inputFile, const char* outputFile, const char* key) {
+    FILE* in = fopen(inputFile, "rb");
+    FILE* out = fopen(outputFile, "wb");
+
+    unsigned char iv[AES_BLOCK_SIZE];
+    memset(iv, 0x00, AES_BLOCK_SIZE);
+
+    AES_KEY aesKey;
+    AES_set_decrypt_key((const unsigned char*)key, 128, &aesKey);
+
+    unsigned char inBuffer[AES_BLOCK_SIZE];
+    unsigned char outBuffer[AES_BLOCK_SIZE];
+
+    while (fread(inBuffer, 1, sizeof(inBuffer), in) == sizeof(inBuffer)) {
+        AES_decrypt(inBuffer, outBuffer, &aesKey);
+        fwrite(outBuffer, 1, sizeof(outBuffer), out);
+    }
+
+    fclose(in);
+    fclose(out);
+}
+
+
+//main function
+int main() {
+    char inputFile[256];
+    char encryptedFile[256];
+    char decryptedFile[256];
+    char key[256];
+    
+    int option = 0;
+    
+    while (option != 3) {
+        printf("\n1. Encrypt File\n");
+        printf("2. Decrypt File\n");
+        printf("3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &option);
+        
+        switch (option) {
+            case 1:
+                printf("\nEnter the input file name: ");
+                scanf("%255s", inputFile);  // Limit the input to avoid buffer overflow
+                
+                printf("Enter the encrypted file name: ");
+                scanf("%255s", encryptedFile);  // Limit the input to avoid buffer overflow
+                
+                printf("Enter the encryption key: ");
+                scanf("%255s", key);  // Limit the input to avoid buffer overflow
+                
+                encryptFile(inputFile, encryptedFile, key);
+                printf("File encrypted successfully.\n");
+                break;
+                
+            case 2:
+                printf("\nEnter the encrypted file name: ");
+                scanf("%255s", encryptedFile);  // Limit the input to avoid buffer overflow
+                
+                printf("Enter the decrypted file name: ");
+                scanf("%255s", decryptedFile);  // Limit the input to avoid buffer overflow
+                
+                printf("Enter the encryption key: ");
+                scanf("%255s", key);  // Limit the input to avoid buffer overflow
+                
+                decryptFile(encryptedFile, decryptedFile, key);
+                printf("File decrypted successfully.\n");
+                break;
+                
+            case 3:
+                printf("\nExiting the program.\n");
+                break;
+                
+            default:
+                printf("\nInvalid option. Please try again.\n");
+                break;
+        }
+    }
+    
+    return 0;
+}
